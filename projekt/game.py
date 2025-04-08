@@ -38,7 +38,7 @@ class Game:
         self.game_over = False
         self.config_path = os.path.join(os.path.dirname(__file__), 'config.txt')
 
-        self.barrel_remover = py.Rect(80, 710, 50, 50)
+        self.barrel_remover = py.Rect(10, 710, 50, 50)
         self.neat_visualizer = VisualizeNN(pos=(self.screen_width - 600, self.screen_height - 600),
                                            size=(600, 600), update_interval=30)
 
@@ -124,6 +124,10 @@ class Game:
                 self.player = None
         for barrel in self.barrels:
             barrel.update_barrel()
+            if self.player and self.player.rect.colliderect(barrel.rect):
+                print("Game over.")
+                self.game_over = True
+
         for barrel in self.barrels[:]:
             if barrel.rect.colliderect(self.barrel_remover):
                 self.barrels.remove(barrel)
@@ -143,12 +147,12 @@ class Game:
             nonlocal gen
             gen += 1
 
-            #svakih 5 generacija im dam 5 sekundi zivota vise
+            # svakih 5 generacija im dam 5 sekundi zivota vise
             if gen % 5 == 0:
                 self.max_lifetime += 5
                 print(f"Nova max_lifetime vrijednost: {self.max_lifetime} sekundi")
 
-            max_frames = self.max_lifetime * FPS  #najveci broj frameova prije nego sto ih obrisem
+            max_frames = self.max_lifetime * FPS  # najveci broj frameova prije nego sto ih obrisem
 
             self.barrels = []
             nets = []
@@ -167,7 +171,7 @@ class Game:
             frame = 0
             neat_viz_surface = None
 
-            while frame < max_frames and players:  #brisem ih ako prestignu max frames
+            while frame < max_frames and players:  # brisem ih ako prestignu max frames
                 for event in py.event.get():
                     if event.type == py.QUIT:
                         py.quit()
@@ -181,13 +185,34 @@ class Game:
                 for barrel in self.barrels:
                     barrel.update_barrel()
 
+                # brisanje barrela kad izadje iz ekrana
+                for barrel in self.barrels[:]:
+                    if (barrel.rect.right < 0 or barrel.rect.left > SCREEN_WIDTH or
+                            barrel.rect.top > SCREEN_HEIGHT or barrel.rect.bottom < 0):
+                        self.barrels.remove(barrel)
+
                 for i in range(len(players) - 1, -1, -1):
                     player = players[i]
                     self.player = players[i]
                     self.platforms = players[i].platforms
-                    self.update()
 
-                    #ako propadne kroz border brisem ga
+                    # nagrada za preskakanje barrela
+                    for barrel in self.barrels:
+                        if (barrel.rect.right > player.rect.left and barrel.rect.left < player.rect.right and
+                                barrel.rect.top > player.rect.bottom and 0 < (
+                                        barrel.rect.top - player.rect.bottom) < 20):
+                            ge[i].fitness += 5  # nagrada za izbjegavanje
+
+                    # ako ga barrel pogodi brisem ga
+                    hit_by_barrel = any(player.rect.colliderect(barrel.rect) for barrel in self.barrels)
+                    if hit_by_barrel:
+                        ge[i].fitness -= 20  # kazna za sudar
+                        del players[i]
+                        del nets[i]
+                        del ge[i]
+                        continue
+
+                    # ako propadne kroz border brisem ga
                     if (player.rect.x < 0 or player.rect.x > SCREEN_WIDTH or
                             player.rect.y < 0 or player.rect.y > SCREEN_HEIGHT):
                         del players[i]
@@ -195,33 +220,60 @@ class Game:
                         del ge[i]
                         continue
 
-                    #bonus fitness za novodosegnutu visinu
+                    # bonus fitness za novodosegnutu visinu
                     if player.rect.y < player.best_y:
                         bonus = player.best_y - player.rect.y
                         ge[i].fitness += bonus
                         player.best_y = player.rect.y
 
-                    #aktiviranje nn
+                    # aktiviranje nn
                     inputs = player.get_network_inputs(self.ladders, self.barrels)
                     output = nets[i].activate(inputs)
-                    print(output)
 
-                    #nn pokrece igraca
+                    #print(output)
+
+                    print(f"Igrač {i} | Ulazi: {['{:.2f}'.format(v) for v in inputs]} | Izlazi: {['{:.2f}'.format(o) for o in output]}")
+                    actions = []
                     if output[0] > 0.8:
+                        actions.append("SKOK")
+                    if output[1] > 0.6:
+                        actions.append("DESNO")
+                    elif output[1] < 0.4:
+                        actions.append("LIJEVO")
+                    #if output[2] > 0.6:
+                    #    actions.append("GORE")
+                    #elif output[2] < 0.4:
+                    #    actions.append("DOLJE")
+
+                    print(f"Igrač {i} | Akcije: {', '.join(actions) if actions else 'STOJI'}")
+
+                    prev_y, prev_x = player.y, player.x
+
+                    # nn pokrece igraca
+                    if output[0] > 0.5:
                         player.upup()
                     if output[1] > 0.5:
-                        player.move_right()
-                    elif output[1] < 0.5:
                         player.move_left()
-                    if output[2] > 0.5:
-                        player.move_up()
-                    elif output[2] < 0.5:
-                        player.move_down()
+                    elif output[1] < 0.5:
+                        player.move_right()
+                    #if output[2] > 0.5:
+                    #    player.move_up()
+                    #elif output[2] < 0.5:
+                    #    player.move_down()
 
-                    #kada dotakne princezu gotovo je
+                    # primjena gravitacije
+                    player.vel_y += player.gravity
+                    player.y += player.vel_y
+                    player.rect.y = player.y
+
+                    # kolizije
+                    player.check_collision_platform(self.platforms, prev_y, prev_x)
+                    player.check_collision_border(self.borders, prev_x)
+
+                    # kada dotakne princezu gotovo je
                     if player.rect.colliderect(self.princess.rect):
                         print(f"Igrač {i} je dosegao princezu! Kraj evaluacije.")
-                        ge[i].fitness += 1000  #fitness bonus jer je dobar
+                        ge[i].fitness += 1000  # fitness bonus jer je dobar
                         self.save_winner(ge[i])
                         return
 
@@ -248,7 +300,7 @@ class Game:
         winner = p.run(eval_genomes, generations)
         print('\nBest genome:\n{!s}'.format(winner))
 
-    def run(self):
+    '''def run(self):
         while True:
             for event in py.event.get():
                 if event.type == py.QUIT:
@@ -262,7 +314,40 @@ class Game:
         
             self.update()
             self.draw()
+            self.clock.tick(FPS)'''
+
+    def run(self):
+        while not self.game_over:
+            for event in py.event.get():
+                if event.type == py.QUIT:
+                    py.quit()
+                    exit()
+                elif event.type == self.NEW_BARREL_EVENT:
+                    new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
+                    self.barrels.append(new_barrel)
+                    new_interval = random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN)
+                    py.time.set_timer(self.NEW_BARREL_EVENT, new_interval)
+
+            self.update()
+            self.draw()
             self.clock.tick(FPS)
+
+        # igra je gotova
+        print("Game over. Press R to restart.")
+        while True:
+            for event in py.event.get():
+                if event.type == py.QUIT:
+                    py.quit()
+                    exit()
+                elif event.type == py.KEYDOWN:
+                    if event.key == py.K_r:
+                        print("Game restart...")
+                        self.__init__(self.screen)
+                        self.run()
+                        return
+                    elif event.key == py.K_ESCAPE:
+                        py.quit()
+                        exit()
 
     def save_winner(self, genome):
         with open("winner.pkl", "wb") as f:
@@ -308,10 +393,10 @@ class Game:
                 player.move_right()
             elif output[1] < 0.5:
                 player.move_left()
-            if output[2] > 0.5:
+            '''if output[2] > 0.5:
                 player.move_up()
             elif output[2] < 0.5:
-                player.move_down()
+                player.move_down()'''
 
             self.screen.fill((0, 0, 0))
             self.screen.blit(self.level_image, (0, 0))

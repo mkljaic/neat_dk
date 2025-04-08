@@ -28,21 +28,24 @@ class Player(pygame.sprite.Sprite):
         #najveca visina potrebno za treniranje neat
         self.best_y = self.rect.y
 
+        #potrebno da ne dopusti da igrac postane superman
+        #self.can_jump = False
+
     def move_left(self):
         self.x -= self.speed
-        self.vel_y += self.gravity
-        self.y += self.vel_y
+        #self.vel_y += self.gravity
+        #self.y += self.vel_y
 
         self.rect.x = self.x
-        self.rect.y = self.y
+        #self.rect.y = self.y
 
     def move_right(self):
         self.x += self.speed
-        self.vel_y += self.gravity
-        self.y += self.vel_y
+        #self.vel_y += self.gravity
+        #self.y += self.vel_y
 
         self.rect.x = self.x
-        self.rect.y = self.y
+        #self.rect.y = self.y
 
     def move_up(self):
         self.y -= self.speed
@@ -61,13 +64,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.y
 
     def upup(self):
-        if self.is_grounded():
-            self.vel_y = -self.jump
-            self.vel_y += self.gravity
-            self.y += self.vel_y
-
-            self.rect.x = self.x
-            self.rect.y = self.y
+        self.vel_y = -self.jump
 
     def move(self, keys):
         prev_y = self.y
@@ -77,9 +74,10 @@ class Player(pygame.sprite.Sprite):
             self.move_left()
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_right()
-        if keys[pygame.K_SPACE] and self.is_grounded():
-            self.upup()
 
+        if keys[pygame.K_SPACE] and self.is_grounded():
+            print("SKOK!")  # test
+            self.upup()
 
         return prev_y, prev_x
 
@@ -94,7 +92,7 @@ class Player(pygame.sprite.Sprite):
             if (abs(self.rect.bottom - platform.rect.top) <= 10 and
                     self.rect.right > platform.rect.left and
                     self.rect.left < platform.rect.right and
-                    platform.rect.top < self.rect.bottom):
+                    platform.rect.top <= self.rect.bottom):
                 return True
         return False
 
@@ -132,16 +130,20 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.y
         for platform in platforms:
             if self.rect.colliderect(platform.rect):
-                #snapanje igraca na platformu ako pada
-                if prev_y + self.height <= platform.rect.top and self.vel_y >= 0:
-                    self.y = platform.rect.top - self.height - 2
+                # snapanje igraca na platformu ako pada
+                if (prev_y + self.height <= platform.rect.top and
+                        self.rect.bottom >= platform.rect.top and
+                        self.vel_y >= 0):
+                    self.y = platform.rect.top - self.height
                     self.vel_y = 0
                     self.rect.y = self.y
-                #ako udari u platformu u skoku odbija ga
+                    #self.can_jump = True  # AKO PUKNE OVO JE RAZLOG
+                # ako udari u platformu u skoku odbija ga
                 elif prev_y >= platform.rect.bottom and self.vel_y < 0:
                     self.y = platform.rect.bottom
                     self.vel_y = 0
                     self.rect.y = self.y
+                    #self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG
 
     def horizontal_steps(self, platforms, prev_x):
         step_height = 10
@@ -198,9 +200,9 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y = self.y
 
     def on_ladder(self):
-        for ladder in self.ladders:
+        '''for ladder in self.ladders:
             if self.rect.colliderect(ladder.rect):
-                return True
+                return True'''
         return False
 
     def climb_ladder(self, keys):
@@ -210,20 +212,35 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_s]:
             self.y += self.speed
             self.vel_y = 0'''
-        if self.is_grounded():
+        '''if self.is_grounded():
             if keys[pygame.K_LEFT] or keys[pygame.K_a]:
                 self.move_left()
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 self.move_right()
         self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.y = self.y'''
+        pass
 
     def update_player(self, keys, platforms):
         prev_y, prev_x = self.y, self.x
+        print("Grounded:", self.is_grounded(), "VelY:", self.vel_y)
+
         if self.on_ladder():
             self.climb_ladder(keys)
         else:
             prev_y, prev_x = self.move(keys)
+
+            # SKOK (provjera)
+            if keys[pygame.K_SPACE] and self.is_grounded():
+                print("SKOK!")  # 👈 TEST
+                self.upup()
+
+            # GRAVITACIJA
+            self.vel_y += self.gravity
+            self.y += self.vel_y
+            self.rect.y = self.y
+
+        # KOLIZIJE
         self.check_collision_platform(platforms, prev_y, prev_x)
         self.check_collision_border(self.borders, prev_x)
 
