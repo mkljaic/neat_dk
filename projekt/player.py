@@ -31,6 +31,9 @@ class Player(pygame.sprite.Sprite):
         #potrebno da ne dopusti da igrac postane superman
         #self.can_jump = False
 
+        #potrebno za novu update_neat_players metodu
+        self.hit_barrel = False
+
     def move_left(self):
         self.x -= self.speed
         #self.vel_y += self.gravity
@@ -92,7 +95,7 @@ class Player(pygame.sprite.Sprite):
             if (abs(self.rect.bottom - platform.rect.top) <= 10 and
                     self.rect.right > platform.rect.left and
                     self.rect.left < platform.rect.right and
-                    platform.rect.top <= self.rect.bottom):
+                    self.rect.centery < platform.rect.top):  # ⬅️ igrač mora biti iznad platforme
                 return True
         return False
 
@@ -140,7 +143,7 @@ class Player(pygame.sprite.Sprite):
                     #self.can_jump = True  # AKO PUKNE OVO JE RAZLOG
                 # ako udari u platformu u skoku odbija ga
                 elif prev_y >= platform.rect.bottom and self.vel_y < 0:
-                    self.y = platform.rect.bottom
+                    self.y = platform.rect.bottom + 1
                     self.vel_y = 0
                     self.rect.y = self.y
                     #self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG

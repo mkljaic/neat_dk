@@ -133,6 +133,7 @@ class Game:
                 self.barrels.remove(barrel)
 
 
+
     def run_neat(self, config_path, generations=50, simulation_frames=3000):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -159,6 +160,10 @@ class Game:
             players = []
             ge = []
 
+            # za detekciju stajanja
+            last_positions = []
+            stuck_counter = []
+
             for genome_id, genome in genomes:
                 genome.fitness = 0
                 net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -167,6 +172,8 @@ class Game:
                 p_inst.best_y = p_inst.rect.y
                 players.append(p_inst)
                 ge.append(genome)
+                last_positions.append(p_inst.rect.x)
+                stuck_counter.append(0)
 
             frame = 0
             neat_viz_surface = None
@@ -196,6 +203,23 @@ class Game:
                     self.player = players[i]
                     self.platforms = players[i].platforms
 
+                    # kazna za stajanje
+                    if player.rect.x == last_positions[i]:
+                        stuck_counter[i] += 1
+                    else:
+                        stuck_counter[i] = 0
+                        last_positions[i] = player.rect.x
+
+                    if stuck_counter[i] > 60:
+                        ge[i].fitness -= 5
+                        del players[i]
+                        del nets[i]
+                        del ge[i]
+                        del last_positions[i]
+                        del stuck_counter[i]
+                        print("kazna jer je debel i ne krece se")
+                        continue
+
                     # nagrada za preskakanje barrela
                     for barrel in self.barrels:
                         if (barrel.rect.right > player.rect.left and barrel.rect.left < player.rect.right and
@@ -207,17 +231,23 @@ class Game:
                     hit_by_barrel = any(player.rect.colliderect(barrel.rect) for barrel in self.barrels)
                     if hit_by_barrel:
                         ge[i].fitness -= 20  # kazna za sudar
+                        print("masna kazna jer bjezi")
                         del players[i]
                         del nets[i]
                         del ge[i]
+                        del last_positions[i]
+                        del stuck_counter[i]
                         continue
 
                     # ako propadne kroz border brisem ga
-                    if (player.rect.x < 0 or player.rect.x > SCREEN_WIDTH or
-                            player.rect.y < 0 or player.rect.y > SCREEN_HEIGHT):
+                    if (player.rect.x < 0 or player.rect.x > BORDER_WIDTH or
+                            player.rect.y < 0 or player.rect.y > BORDER_HEIGHT):
+                        ge[i].fitness -= 100  # masivna kazna
                         del players[i]
                         del nets[i]
                         del ge[i]
+                        del last_positions[i]
+                        del stuck_counter[i]
                         continue
 
                     # bonus fitness za novodosegnutu visinu
@@ -232,34 +262,19 @@ class Game:
 
                     #print(output)
 
-                    print(f"Igrač {i} | Ulazi: {['{:.2f}'.format(v) for v in inputs]} | Izlazi: {['{:.2f}'.format(o) for o in output]}")
-                    actions = []
-                    if output[0] > 0.8:
-                        actions.append("SKOK")
-                    if output[1] > 0.6:
-                        actions.append("DESNO")
-                    elif output[1] < 0.4:
-                        actions.append("LIJEVO")
-                    #if output[2] > 0.6:
-                    #    actions.append("GORE")
-                    #elif output[2] < 0.4:
-                    #    actions.append("DOLJE")
-
-                    print(f"Igrač {i} | Akcije: {', '.join(actions) if actions else 'STOJI'}")
-
                     prev_y, prev_x = player.y, player.x
 
                     # nn pokrece igraca
-                    if output[0] > 0.5:
+                    if output[0] > 0.5 and player.is_grounded():
                         player.upup()
                     if output[1] > 0.5:
-                        player.move_left()
-                    elif output[1] < 0.5:
                         player.move_right()
+                    elif output[1] < -0.5:
+                        player.move_left()
                     #if output[2] > 0.5:
-                    #    player.move_up()
-                    #elif output[2] < 0.5:
-                    #    player.move_down()
+                        #player.move_up()
+                    #elif output[2] < -0.5:
+                        #player.move_down()
 
                     # primjena gravitacije
                     player.vel_y += player.gravity
