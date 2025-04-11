@@ -39,7 +39,7 @@ PRINCESS_X = 280
 PRINCESS_Y = 129
 
 #=================== NEAT / Neural Network Constants ==================================
-INPUT_NEURONS = 10
+INPUT_NEURONS = 11
 OUTPUT_NEURONS = 3
 
 NODE_RADIUS = 20

@@ -78,3 +78,8 @@ species_elitism      = 2
 [DefaultReproduction]
 elitism            = 2
 survival_threshold = 0.2
+
+
+python main.py --mode run           # za ručno igranje
+python main.py --mode run_neat      # za treniranje
+python main.py --mode run_winner    # za pokretanje pobjednika

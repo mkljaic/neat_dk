@@ -46,7 +46,7 @@ class NN:
         self.genome = genome
         self.pos = (int(pos[0] + NODE_RADIUS), int(pos[1]))
 
-        input_names = ["player x", "player y", "is grounded", "is on ladder", "is climbing", "ladder x", "barrel x", "barrel y", "barrel vel x", "barrel vel y"]
+        input_names = ["player x", "player y", "is grounded", "is on ladder", "is climbing", "ladder x", "barrel x", "barrel y", "barrel vel x", "barrel vel y", "distance to princess y"]
         output_names = ["Jump", "Right/Left", "Climb ladder"]
         all_nodes = list(genome.nodes.keys())
         nodeIdList = []

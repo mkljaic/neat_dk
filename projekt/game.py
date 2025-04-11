@@ -16,7 +16,7 @@ from projekt.barrel import Barrel
 from projekt.ladder_detect import LadderDetect
 from projekt.princess import Princess
 from projekt.config import *
-from visualizeNEAT import VisualizeNN
+from projekt.visualizeNEAT import VisualizeNN
 
 MIN_BARREL_SPAWN = 1000
 MAX_BARREL_SPAWN = 5000
@@ -36,7 +36,9 @@ class Game:
         self.barrels = []
         self.player = Player(PLAYER_X, PLAYER_Y, self.platforms, self.borders, self.ladders)
         self.princess = Princess(PRINCESS_X, PRINCESS_Y, self.player)
-        self.level_image = py.image.load(os.path.join('Assets', 'level.png')).convert()
+
+        self.level_image = py.image.load(os.path.join('projekt', 'Assets', 'level.png')).convert()
+
 
         self.NEW_BARREL_EVENT = py.USEREVENT + 1
         py.time.set_timer(self.NEW_BARREL_EVENT, random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN))
@@ -337,7 +339,7 @@ class Game:
                         player.best_y = player.rect.y
 
                     # aktiviranje nn
-                    inputs = player.get_network_inputs(self.ladders, self.barrels)
+                    inputs = player.get_network_inputs(self.ladders, self.barrels, self.princess.rect.y)
                     output = nets[i].activate(inputs)
 
                     #print(output)

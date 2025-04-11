@@ -250,12 +250,13 @@ class Player(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-    def get_network_inputs(self, ladders, barrels):
+    def get_network_inputs(self, ladders, barrels, princess_y):
         norm_x = self.rect.x / SCREEN_WIDTH
         norm_y = self.rect.y / SCREEN_HEIGHT
         grounded = 1.0 if self.is_grounded() else 0.0
         on_ladder = 1.0 if self.on_ladder() else 0.0
         climbing = 0.0
+        distance_to_princess_y = (princess_y - self.rect.y) / SCREEN_HEIGHT
         if ladders:
             nearest_ladder = min(ladders, key=lambda l: abs(l.rect.x - self.rect.x))
             ladder_x = nearest_ladder.rect.x / SCREEN_WIDTH
@@ -269,4 +270,4 @@ class Player(pygame.sprite.Sprite):
             barrel_vel_y = nearest_barrel.vel_y / BARREL_SPEED if hasattr(nearest_barrel, 'vel_y') else 0.0
         else:
             barrel_x = barrel_y = barrel_vel_x = barrel_vel_y = 0.0
-        return [norm_x, norm_y, grounded, on_ladder, climbing, ladder_x, barrel_x, barrel_y, barrel_vel_x, barrel_vel_y]
+        return [norm_x, norm_y, grounded, on_ladder, climbing, ladder_x, barrel_x, barrel_y, barrel_vel_x, barrel_vel_y, distance_to_princess_y]
