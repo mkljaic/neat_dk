@@ -172,6 +172,7 @@ class Game:
             last_positions = []
             stuck_counter = []
 
+            #stvaram novcice
             self.coins = pygame.sprite.Group()
             for (x, y, width, height) in Coin.coin_positions:
                 coin = Coin(x, y, width, height)
@@ -236,7 +237,7 @@ class Game:
                         del ge[i]
                         del last_positions[i]
                         del stuck_counter[i]
-                        print("kazna jer je debel i ne krece se")
+                        #print("kazna jer je debel i ne krece se")
                         continue
 
                     # nagrada za preskakanje barrela
@@ -259,14 +260,14 @@ class Game:
                         continue
 
                     # ako propadne kroz border brisem ga
-                    if (player.rect.x < 0 or player.rect.x > BORDER_WIDTH or
-                            player.rect.y < 0 or player.rect.y > BORDER_HEIGHT):
+                    if player.rect.y < 0 or player.rect.y > BORDER_HEIGHT:
                         ge[i].fitness -= 100  # masivna kazna
                         del players[i]
                         del nets[i]
                         del ge[i]
                         del last_positions[i]
                         del stuck_counter[i]
+                        print("masna kazna jer bjezi")
                         continue
 
                     # bonus fitness za novodosegnutu visinu
