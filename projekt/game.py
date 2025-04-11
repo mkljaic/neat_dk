@@ -121,9 +121,6 @@ class Game:
         for barrel in self.barrels:
             barrel.draw(self.screen)
 
-        self.coins.draw(self.screen)
-        self.punishments.draw(self.screen)
-        self.scoins.draw(self.screen)
 
         self.princess.draw(self.screen)
 
@@ -266,14 +263,12 @@ class Game:
                     collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
                     if collided_coins:
                         ge[i].fitness += 20 * len(collided_coins)
-                        print(
-                            f"Igrač {i} pokupio {len(collided_coins)} novčić. Fitness povećan za {20 * len(collided_coins)}!")
+                        print(f"Igrač {i} pokupio {len(collided_coins)} novčić. Fitness povećan za {20 * len(collided_coins)}!")
 
                     collided_scoins = pygame.sprite.spritecollide(player, self.scoins, True)
                     if collided_scoins:
                         ge[i].fitness += 100 * len(collided_scoins)
-                        print(
-                            f"Igrač {i} pokupio {len(collided_scoins)} super novčić. Fitness povećan za {100 * len(collided_scoins)}!")
+                        print(f"Igrač {i} pokupio {len(collided_scoins)} super novčić. Fitness povećan za {100 * len(collided_scoins)}!")
 
                     collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
@@ -281,8 +276,7 @@ class Game:
                         del players[i]
                         del nets[i]
                         del ge[i]
-                        print(
-                            f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {150}!")
+                        #print(f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {150}!")
                         continue
 
                     # kazna za stajanje
@@ -352,7 +346,7 @@ class Game:
                         # Ako je skočio nakon što nije neko vrijeme
                         if player.frames_since_jump >= 3 * FPS:  # 3 sekunde
                             ge[i].fitness += 5
-                            print(f"Igrač {i} skočio nakon duljeg čekanja. Bonus +5.")
+                            #print(f"Igrač {i} skočio nakon duljeg čekanja. Bonus +5.")
                         player.frames_since_jump = 0
                         player.jump_rewarded = True
 
@@ -385,7 +379,7 @@ class Game:
                     for j, player in enumerate(players):
                         if player.frames_since_jump == 3 * FPS:  # 3 sekunde
                             ge[j].fitness -= 5
-                            print(f"Igrač {j} nije skočio {3} sekunde. Kazna -5.")
+                            #print(f"Igrač {j} nije skočio {3} sekunde. Kazna -5.")
 
                 if players and ge:
                     best_genome = max(ge, key=lambda g: g.fitness)

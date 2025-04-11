@@ -79,7 +79,7 @@ class Player(pygame.sprite.Sprite):
             self.move_right()
 
         if keys[pygame.K_SPACE] and self.is_grounded():
-            print("SKOK!")  # test
+            #print("SKOK!")  # test
             self.upup()
 
         return prev_y, prev_x
@@ -226,7 +226,7 @@ class Player(pygame.sprite.Sprite):
 
     def update_player(self, keys, platforms):
         prev_y, prev_x = self.y, self.x
-        print("Grounded:", self.is_grounded(), "VelY:", self.vel_y)
+        #print("Grounded:", self.is_grounded(), "VelY:", self.vel_y)
 
         if self.on_ladder():
             self.climb_ladder(keys)
@@ -235,7 +235,7 @@ class Player(pygame.sprite.Sprite):
 
             # SKOK (provjera)
             if keys[pygame.K_SPACE] and self.is_grounded():
-                print("SKOK!")  # 👈 TEST
+                #print("SKOK!")  # 👈 TEST
                 self.upup()
 
             # GRAVITACIJA

@@ -2,10 +2,10 @@ import pygame
 
 class Coin(pygame.sprite.Sprite):
     coin_positions = [
-        (350, 700, 20, 20),
-        (550, 680, 20, 20),
-        (640, 675, 20, 20),
-        (630, 640, 20, 20)
+        (350, 700, 20, 20), #prvi
+        (550, 680, 20, 20), #onaj na ljestvama
+        (640, 675, 20, 20), #niski
+        (620, 640, 20, 20) #onaj gore
     ]
 
     def __init__(self, x, y, width, height):
