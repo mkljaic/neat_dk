@@ -199,7 +199,9 @@ class Game:
                 stuck_counter.append(0)
                 p_inst.was_grounded = True  # prati je li bio na podu
                 p_inst.has_jumped = False  # u zraku ili ne
-                p_inst.previous_best_y = p_inst.rect.y  # za usporedbu visine prije skoka
+                p_inst.previous_best_y = p_inst.rect.y  # za usporedbu visine prije
+                p_inst.frames_since_jump = 0  # broji frameove od zadnjeg skoka
+                p_inst.jump_rewarded = False  # da ne dajemo više puta nagradu
 
             frame = 0
             neat_viz_surface = None
@@ -229,6 +231,10 @@ class Game:
                     self.player = players[i]
                     self.platforms = players[i].platforms
 
+                    # Brojanje frameova bez skoka
+                    player.frames_since_jump += 1
+
+
                     currently_grounded = player.is_grounded()
 
                     # Ako je bio na tlu i sad više nije → napravio je skok
@@ -240,20 +246,20 @@ class Game:
                     if not player.was_grounded and currently_grounded and player.has_jumped:
                         if player.best_y >= player.previous_best_y:
                             ge[i].fitness -= 5  # kazna ako skok nije donio korist
-                            print(f"Igrač {i} skočio bez koristi. Kazna -5.")
+                            #print(f"Igrač {i} skočio bez koristi. Kazna -5.")
                         player.has_jumped = False  # reset
                     player.was_grounded = currently_grounded
 
 
                     collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
                     if collided_coins:
-                        ge[i].fitness += 10 * len(collided_coins)
+                        ge[i].fitness += 20 * len(collided_coins)
                         print(
-                            f"Igrač {i} pokupio {len(collided_coins)} novčića. Fitness povećan za {10 * len(collided_coins)}!")
+                            f"Igrač {i} pokupio {len(collided_coins)} novčića. Fitness povećan za {20 * len(collided_coins)}!")
 
                     collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
-                        ge[i].fitness -= 100
+                        ge[i].fitness -= 50
                         del players[i]
                         del nets[i]
                         del ge[i]
@@ -325,6 +331,13 @@ class Game:
                     # nn pokrece igraca
                     if output[0] > 0.5 and player.is_grounded():
                         player.upup()
+                        # Ako je skočio nakon što nije neko vrijeme
+                        if player.frames_since_jump >= 3 * FPS:  # 3 sekunde
+                            ge[i].fitness += 5
+                            print(f"Igrač {i} skočio nakon duljeg čekanja. Bonus +5.")
+                        player.frames_since_jump = 0
+                        player.jump_rewarded = True
+
                     if output[1] > 0.5:
                         player.move_right()
                     elif output[1] < -0.5:
@@ -349,6 +362,12 @@ class Game:
                         ge[i].fitness += 1000  # fitness bonus jer je dobar
                         self.save_winner(ge[i])
                         return
+
+                    # Kazna ako predugo nije skočio
+                    for j, player in enumerate(players):
+                        if player.frames_since_jump == 3 * FPS:  # 3 sekunde
+                            ge[j].fitness -= 5
+                            print(f"Igrač {j} nije skočio {3} sekunde. Kazna -5.")
 
                 if players and ge:
                     best_genome = max(ge, key=lambda g: g.fitness)
