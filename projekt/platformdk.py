@@ -14,9 +14,9 @@ class PlatformDK(pygame.sprite.Sprite):
 
         (580, 660, 47, 25), #2 1
         (527, 656, 53, 25),  # 2 2
-        (480, 653, 48, 25),  # 2 3
-        (433, 648, 48, 25), #2 4
-        (386, 644, 48, 25),  # 2 5
+        (478, 653, 49, 25),  # 2 3
+        (431, 648, 49, 25), #2 4
+        (384, 644, 49, 25),  # 2 5
         (338, 642, 48, 25),  # 2 6
         (290, 640, 48, 25),  # 2 7
         (242, 638, 48, 25),  # 2 8
@@ -79,6 +79,6 @@ class PlatformDK(pygame.sprite.Sprite):
 
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.Surface((width, height), pygame.SRCALPHA)
+        self.image = pygame.Surface((width, height))
         self.image.fill((255, 255, 255, 0))
         self.rect = self.image.get_rect(topleft=(x, y))

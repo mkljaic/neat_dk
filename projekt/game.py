@@ -197,6 +197,9 @@ class Game:
                 ge.append(genome)
                 last_positions.append(p_inst.rect.x)
                 stuck_counter.append(0)
+                p_inst.was_grounded = True  # prati je li bio na podu
+                p_inst.has_jumped = False  # u zraku ili ne
+                p_inst.previous_best_y = p_inst.rect.y  # za usporedbu visine prije skoka
 
             frame = 0
             neat_viz_surface = None
@@ -226,6 +229,22 @@ class Game:
                     self.player = players[i]
                     self.platforms = players[i].platforms
 
+                    currently_grounded = player.is_grounded()
+
+                    # Ako je bio na tlu i sad više nije → napravio je skok
+                    if player.was_grounded and not currently_grounded:
+                        player.has_jumped = True
+                        player.previous_best_y = player.best_y
+
+                    # Ako je sletio na pod nakon skoka
+                    if not player.was_grounded and currently_grounded and player.has_jumped:
+                        if player.best_y >= player.previous_best_y:
+                            ge[i].fitness -= 5  # kazna ako skok nije donio korist
+                            print(f"Igrač {i} skočio bez koristi. Kazna -5.")
+                        player.has_jumped = False  # reset
+                    player.was_grounded = currently_grounded
+
+
                     collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
                     if collided_coins:
                         ge[i].fitness += 10 * len(collided_coins)
@@ -234,12 +253,12 @@ class Game:
 
                     collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
-                        ge[i].fitness -= 100 * len(collided_punishment)
+                        ge[i].fitness -= 100
                         del players[i]
                         del nets[i]
                         del ge[i]
                         print(
-                            f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {10 * len(collided_punishment)}!")
+                            f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {100}!")
                         continue
 
                     # kazna za stajanje

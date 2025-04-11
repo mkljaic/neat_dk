@@ -149,7 +149,7 @@ class Player(pygame.sprite.Sprite):
                     #self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG
 
     def horizontal_steps(self, platforms, prev_x):
-        step_height = 10
+        step_height = 15
         self.rect.x = self.x
         for platform in platforms:
             if self.rect.colliderect(platform.rect):
