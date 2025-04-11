@@ -95,7 +95,7 @@ class Player(pygame.sprite.Sprite):
             if (abs(self.rect.bottom - platform.rect.top) <= 10 and
                     self.rect.right > platform.rect.left and
                     self.rect.left < platform.rect.right and
-                    self.rect.centery < platform.rect.top):  # ⬅️ igrač mora biti iznad platforme
+                    self.rect.centery < platform.rect.top):  #igrac mora biti iznad platforme
                 return True
         return False
 
@@ -226,7 +226,7 @@ class Player(pygame.sprite.Sprite):
 
     def update_player(self, keys, platforms):
         prev_y, prev_x = self.y, self.x
-        #print("Grounded:", self.is_grounded(), "VelY:", self.vel_y)
+        #print("grounded:", self.is_grounded(), "VelY:", self.vel_y)
 
         if self.on_ladder():
             self.climb_ladder(keys)
@@ -238,12 +238,12 @@ class Player(pygame.sprite.Sprite):
                 #print("SKOK!")  # 👈 TEST
                 self.upup()
 
-            # GRAVITACIJA
+            # gravitacija
             self.vel_y += self.gravity
             self.y += self.vel_y
             self.rect.y = self.y
 
-        # KOLIZIJE
+        # provjera kolizija
         self.check_collision_platform(platforms, prev_y, prev_x)
         self.check_collision_border(self.borders, prev_x)
 
