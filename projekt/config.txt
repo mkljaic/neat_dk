@@ -30,8 +30,8 @@ compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.7
-conn_delete_prob        = 0.3
+conn_add_prob           = 0.3
+conn_delete_prob        = 0.4
 
 # connection enable options
 enabled_default         = False
@@ -63,8 +63,8 @@ weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
 weight_max_value        = 30
 weight_min_value        = -30
-weight_mutate_power     = 1.5
-weight_mutate_rate      = 0.9
+weight_mutate_power     = 1.8
+weight_mutate_rate      = 1.0
 weight_replace_rate     = 0.3
 
 [DefaultSpeciesSet]

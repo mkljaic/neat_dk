@@ -4,6 +4,7 @@ class Coin(pygame.sprite.Sprite):
     coin_positions = [
         (350, 700, 20, 20),
         (550, 680, 20, 20),
+        (640, 675, 20, 20),
         (630, 640, 20, 20)
     ]
 
