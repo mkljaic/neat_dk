@@ -240,6 +240,7 @@ class Game:
                         del ge[i]
                         print(
                             f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {10 * len(collided_punishment)}!")
+                        continue
 
                     # kazna za stajanje
                     if player.rect.x == last_positions[i]:
