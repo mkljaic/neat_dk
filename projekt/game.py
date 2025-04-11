@@ -1,8 +1,11 @@
+import pygame
 import pygame as py
 import random
 import os
 import neat
 import pickle
+
+from projekt.coin import Coin
 from projekt.player import Player
 from projekt.platformdk import PlatformDK
 from projekt.border import Border
@@ -44,6 +47,8 @@ class Game:
 
         self.max_lifetime = 10
 
+
+
     def draw_eval(self, players, neat_img=None, overlay_data=None):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.level_image, (0, 0))
@@ -59,6 +64,7 @@ class Game:
         for barrel in self.barrels:
             barrel.draw(self.screen)
         self.princess.draw(self.screen)
+        self.coins.draw(self.screen)
 
         for player in players:
             player.draw(self.screen)
@@ -107,6 +113,8 @@ class Game:
             self.screen.blit(ladder_detect.image, ladder_detect.rect)'''
         for barrel in self.barrels:
             barrel.draw(self.screen)
+
+        self.coins.draw(self.screen)
 
         self.princess.draw(self.screen)
 
@@ -164,6 +172,11 @@ class Game:
             last_positions = []
             stuck_counter = []
 
+            self.coins = pygame.sprite.Group()
+            for (x, y, width, height) in Coin.coin_positions:
+                coin = Coin(x, y, width, height)
+                self.coins.add(coin)
+
             for genome_id, genome in genomes:
                 genome.fitness = 0
                 net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -202,6 +215,12 @@ class Game:
                     player = players[i]
                     self.player = players[i]
                     self.platforms = players[i].platforms
+
+                    collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
+                    if collided_coins:
+                        ge[i].fitness += 10 * len(collided_coins)
+                        print(
+                            f"Igrač {i} pokupio {len(collided_coins)} novčića. Fitness povećan za {10 * len(collided_coins)}!")
 
                     # kazna za stajanje
                     if player.rect.x == last_positions[i]:
