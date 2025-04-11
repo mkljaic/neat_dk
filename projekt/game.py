@@ -5,6 +5,7 @@ import os
 import neat
 import pickle
 
+from projekt.super_coin import SuperCoin
 from projekt.punishment import Punishment
 from projekt.coin import Coin
 from projekt.player import Player
@@ -65,8 +66,10 @@ class Game:
         for barrel in self.barrels:
             barrel.draw(self.screen)
         self.princess.draw(self.screen)
+
         self.coins.draw(self.screen)
         self.punishments.draw(self.screen)
+        self.scoins.draw(self.screen)
 
         for player in players:
             player.draw(self.screen)
@@ -118,6 +121,7 @@ class Game:
 
         self.coins.draw(self.screen)
         self.punishments.draw(self.screen)
+        self.scoins.draw(self.screen)
 
         self.princess.draw(self.screen)
 
@@ -180,6 +184,12 @@ class Game:
             for (x, y, width, height) in Coin.coin_positions:
                 coin = Coin(x, y, width, height)
                 self.coins.add(coin)
+
+            # stvaram super novcice
+            self.scoins = pygame.sprite.Group()
+            for (x, y, width, height) in SuperCoin.scoin_positions:
+                scoin = SuperCoin(x, y, width, height)
+                self.scoins.add(scoin)
 
             # stvaram kaznu
             self.punishments = pygame.sprite.Group()
@@ -255,16 +265,22 @@ class Game:
                     if collided_coins:
                         ge[i].fitness += 20 * len(collided_coins)
                         print(
-                            f"Igrač {i} pokupio {len(collided_coins)} novčića. Fitness povećan za {20 * len(collided_coins)}!")
+                            f"Igrač {i} pokupio {len(collided_coins)} novčić. Fitness povećan za {20 * len(collided_coins)}!")
+
+                    collided_scoins = pygame.sprite.spritecollide(player, self.scoins, True)
+                    if collided_scoins:
+                        ge[i].fitness += 100 * len(collided_scoins)
+                        print(
+                            f"Igrač {i} pokupio {len(collided_scoins)} super novčić. Fitness povećan za {100 * len(collided_scoins)}!")
 
                     collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
-                        ge[i].fitness -= 50
+                        ge[i].fitness -= 150
                         del players[i]
                         del nets[i]
                         del ge[i]
                         print(
-                            f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {100}!")
+                            f"Igrač {i} dobio {len(collided_punishment)} kaznu. Fitness umanjen za {150}!")
                         continue
 
                     # kazna za stajanje
