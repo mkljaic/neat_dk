@@ -1,6 +1,7 @@
 import os
 import pygame
 from projekt.config import *
+import time
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, platforms, borders, ladders):
@@ -33,6 +34,9 @@ class Player(pygame.sprite.Sprite):
 
         #potrebno za novu update_neat_players metodu
         self.hit_barrel = False
+
+        self.last_jump_time = 0  # vrijeme zadnjeg skoka
+        self.jump_cooldown = 1.0  # cooldown u sekundama
 
     def move_left(self):
         self.x -= self.speed
@@ -78,9 +82,11 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_right()
 
+        current_time = time.time()
         if keys[pygame.K_SPACE] and self.is_grounded():
-            #print("SKOK!")  # test
-            self.upup()
+            if current_time - self.last_jump_time >= self.jump_cooldown:
+                self.upup()
+                self.last_jump_time = current_time
 
         return prev_y, prev_x
 
@@ -151,32 +157,35 @@ class Player(pygame.sprite.Sprite):
     def horizontal_steps(self, platforms, prev_x):
         step_height = 15
         self.rect.x = self.x
-        for platform in platforms:
-            if self.rect.colliderect(platform.rect):
-                if prev_x + self.width <= platform.rect.left:
-                    can_step = False
-                    for step in range(1, step_height + 1):
-                        self.rect.y = self.y - step
-                        if not self.rect.colliderect(platform.rect):
-                            can_step = True
-                            self.y -= step
-                            break
-                    if not can_step:
-                        self.x = platform.rect.left - self.width
-                    self.rect.x = self.x
-                    self.rect.y = self.y
-                elif prev_x >= platform.rect.right:
-                    can_step = False
-                    for step in range(1, step_height + 1):
-                        self.rect.y = self.y - step
-                        if not self.rect.colliderect(platform.rect):
-                            can_step = True
-                            self.y -= step
-                            break
-                    if not can_step:
-                        self.x = platform.rect.right
-                    self.rect.x = self.x
-                    self.rect.y = self.y
+
+        if self.is_grounded():
+            for platform in platforms:
+                if self.rect.colliderect(platform.rect):
+                    if prev_x + self.width <= platform.rect.left:
+                        can_step = False
+                        for step in range(1, step_height + 1):
+                            self.rect.y = self.y - step
+                            if not self.rect.colliderect(platform.rect):
+                                can_step = True
+                                self.y -= step
+                                break
+                        if not can_step:
+                            self.x = platform.rect.left - self.width
+                        self.rect.x = self.x
+                        self.rect.y = self.y
+
+                    elif prev_x >= platform.rect.right:
+                        can_step = False
+                        for step in range(1, step_height + 1):
+                            self.rect.y = self.y - step
+                            if not self.rect.colliderect(platform.rect):
+                                can_step = True
+                                self.y -= step
+                                break
+                        if not can_step:
+                            self.x = platform.rect.right
+                        self.rect.x = self.x
+                        self.rect.y = self.y
 
     def check_collision_platform(self, platforms, prev_y, prev_x):
         self.vertically_collide(platforms, prev_y)
@@ -234,9 +243,11 @@ class Player(pygame.sprite.Sprite):
             prev_y, prev_x = self.move(keys)
 
             # SKOK (provjera)
+            current_time = time.time()
             if keys[pygame.K_SPACE] and self.is_grounded():
-                #print("SKOK!")  # 👈 TEST
-                self.upup()
+                if current_time - self.last_jump_time >= self.jump_cooldown:
+                    self.upup()
+                    self.last_jump_time = current_time
 
             # gravitacija
             self.vel_y += self.gravity
