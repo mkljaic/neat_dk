@@ -133,20 +133,20 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.y
         for platform in platforms:
             if self.rect.colliderect(platform.rect):
-                # snapanje igraca na platformu ako pada
-                if (prev_y + self.height <= platform.rect.top and
-                        self.rect.bottom >= platform.rect.top and
-                        self.vel_y >= 0):
-                    self.y = platform.rect.top - self.height
-                    self.vel_y = 0
-                    self.rect.y = self.y
-                    #self.can_jump = True  # AKO PUKNE OVO JE RAZLOG
                 # ako udari u platformu u skoku odbija ga
-                elif prev_y >= platform.rect.bottom and self.vel_y < 0:
+                if prev_y >= platform.rect.bottom and self.vel_y < 0:
                     self.y = platform.rect.bottom + 1
                     self.vel_y = 0
                     self.rect.y = self.y
-                    #self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG
+                    # self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG
+                # snapanje igraca na platformu ako pada
+                elif (prev_y + self.height <= platform.rect.top and
+                      self.rect.bottom >= platform.rect.top and
+                      self.vel_y >= 0):
+                    self.y = platform.rect.top - self.height
+                    self.vel_y = 0
+                    self.rect.y = self.y
+                    # self.can_jump = True  # AKO PUKNE OVO JE RAZLOG
 
     def horizontal_steps(self, platforms, prev_x):
         step_height = 15

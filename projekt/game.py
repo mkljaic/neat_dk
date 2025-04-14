@@ -252,12 +252,12 @@ class Game:
                         player.previous_best_y = player.best_y
 
                     # ako je sletio na pod nakon skoka
-                    if not player.was_grounded and currently_grounded and player.has_jumped:
+                    '''if not player.was_grounded and currently_grounded and player.has_jumped:
                         if player.best_y >= player.previous_best_y:
-                            ge[i].fitness -= 5  # kazna ako skok nije donio korist
+                            ge[i].fitness -= 5  # kazna ako skace da skace
                             #print(f"igrac {i} skocio bez razloga. kazna -5.")
                         player.has_jumped = False  # reset
-                    player.was_grounded = currently_grounded
+                    player.was_grounded = currently_grounded'''
 
 
                     collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
@@ -375,11 +375,11 @@ class Game:
                         self.save_winner(ge[i])
                         return
 
-                    # Kazna ako predugo nije skočio
-                    for j, player in enumerate(players):
+                    # kazna ako predugo nije skočio
+                    '''for j, player in enumerate(players):
                         if player.frames_since_jump == 3 * FPS:  # 3 sekunde
                             ge[j].fitness -= 5
-                            #print(f"igrac {j} nije skocio {3} sekunde. kazna -5.")
+                            #print(f"igrac {j} nije skocio {3} sekunde. kazna -5.")'''
 
                 if players and ge:
                     best_genome = max(ge, key=lambda g: g.fitness)
