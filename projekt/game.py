@@ -19,8 +19,8 @@ from projekt.config import *
 from projekt.visualizeNEAT import VisualizeNN
 import time
 
-MIN_BARREL_SPAWN = 1000
-MAX_BARREL_SPAWN = 5000
+MIN_BARREL_SPAWN = 3000
+MAX_BARREL_SPAWN = 10000
 
 class Game:
     def __init__(self, screen):
@@ -50,7 +50,7 @@ class Game:
         self.neat_visualizer = VisualizeNN(pos=(self.screen_width - 600, self.screen_height - 600),
                                            size=(600, 600), update_interval=30)
 
-        self.max_lifetime = 10
+        self.max_lifetime = 20
 
         self.last_jump_time = 0  # vrijeme zadnjeg skoka
         self.jump_cooldown = 1.0  # cooldown u sekundama
@@ -156,7 +156,7 @@ class Game:
 
 
                                         #promijeniti ako hocu vise generacija
-    def run_neat(self, config_path, generations=50, simulation_frames=3000):
+    def run_neat(self, config_path, generations=500, simulation_frames=3000):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                     config_path)
@@ -214,6 +214,7 @@ class Game:
                 ge.append(genome)
                 last_positions.append(p_inst.rect.x)
                 stuck_counter.append(0)
+
                 p_inst.was_grounded = True  # prati je li bio na podu
                 p_inst.has_jumped = False  # u zraku ili ne
                 p_inst.previous_best_y = p_inst.rect.y  # za usporedbu visine prije
@@ -314,7 +315,7 @@ class Game:
                     # ako ga barrel pogodi brisem ga
                     hit_by_barrel = any(player.rect.colliderect(barrel.rect) for barrel in self.barrels)
                     if hit_by_barrel:
-                        ge[i].fitness -= 20  # kazna za sudar
+                        ge[i].fitness -= 5  # kazna za sudar
                         print("masna kazna jer ga je bacva udarila")
                         del players[i]
                         del nets[i]
@@ -338,6 +339,7 @@ class Game:
                     # bonus fitness za novodosegnutu visinu
                     if player.rect.y < player.best_y:
                         bonus = player.best_y - player.rect.y
+                        print(bonus)
                         ge[i].fitness += bonus
                         player.best_y = player.rect.y
 
