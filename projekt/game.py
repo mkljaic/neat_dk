@@ -17,6 +17,7 @@ from projekt.ladder_detect import LadderDetect
 from projekt.princess import Princess
 from projekt.config import *
 from projekt.visualizeNEAT import VisualizeNN
+import time
 
 MIN_BARREL_SPAWN = 1000
 MAX_BARREL_SPAWN = 5000
@@ -50,6 +51,9 @@ class Game:
                                            size=(600, 600), update_interval=30)
 
         self.max_lifetime = 10
+
+        self.last_jump_time = 0  # vrijeme zadnjeg skoka
+        self.jump_cooldown = 1.0  # cooldown u sekundama
 
 
 
@@ -244,7 +248,7 @@ class Game:
                     self.player = players[i]
                     self.platforms = players[i].platforms
 
-                    # nrojanje frameova bez skoka
+                    # brojanje frameova bez skoka
                     player.frames_since_jump += 1
 
 
@@ -345,9 +349,14 @@ class Game:
 
                     prev_y, prev_x = player.y, player.x
 
+                    current_time = time.time()
+
                     # nn pokrece igraca
-                    if output[0] > 0.5 and player.is_grounded():
-                        player.upup()
+                    if output[0] > 0.3 and player.is_grounded():
+                        if current_time - self.last_jump_time >= self.jump_cooldown:
+                            player.upup()
+                            self.last_jump_time = current_time
+                        #player.upup()
                         # ako je skocio nakon sto nije neko vrijeme
                         if player.frames_since_jump >= 3 * FPS:  # 3 sekunde
                             ge[i].fitness += 5

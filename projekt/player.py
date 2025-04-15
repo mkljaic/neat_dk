@@ -198,44 +198,44 @@ class Player(pygame.sprite.Sprite):
 
         for platform in platforms:
             if self.rect.colliderect(platform.rect):
-                print("Kolizija detektirana:")
-                print(f"IGRAČ: {self.rect}, PLATFORM: {platform.rect}")
-                print(f"Prethodne pozicije -> prev_x={prev_x}, prev_y={prev_y}")
-                print(f"Trenutne pozicije -> x={self.x}, y={self.y}, vel_y={self.vel_y}")
+                #print("Kolizija detektirana:")
+                #print(f"IGRAČ: {self.rect}, PLATFORM: {platform.rect}")
+                #print(f"Prethodne pozicije -> prev_x={prev_x}, prev_y={prev_y}")
+                #print(f"Trenutne pozicije -> x={self.x}, y={self.y}, vel_y={self.vel_y}")
 
                 # Provjeri dolazi li igrač odozgo i postavi ga na platformu
                 if prev_y + self.height <= platform.rect.top:
                     self.y = platform.rect.top - self.height
                     self.vel_y = 0
-                    print("Igrač postavljen na platformu (odozgo).")
+                    #print("Igrač postavljen na platformu (odozgo).")
 
                 # Ako igrač udara platformu odozdo, odbaci ga prema dolje
                 elif prev_y >= platform.rect.bottom:
                     self.y = platform.rect.bottom
                     self.vel_y = 0
-                    print("Igrač izbačen ISPOD platforme (udar odozdo).")
+                    #print("Igrač izbačen ISPOD platforme (udar odozdo).")
 
                 # Bočna kolizija (lijevo ili desno)
                 else:
                     if prev_x + self.width <= platform.rect.left:
                         self.x = platform.rect.left - self.width
-                        print("Odbijanje od LIJEVOG ruba platforme.")
+                        #print("Odbijanje od LIJEVOG ruba platforme.")
                     elif prev_x >= platform.rect.right:
                         self.x = platform.rect.right
-                        print("Odbijanje od DESNOG ruba platforme.")
+                        #print("Odbijanje od DESNOG ruba platforme.")
                     else:
                         # Ako je baš zaglavio, prisilno ga izbaci dolje
                         self.y = platform.rect.bottom
                         self.vel_y = 0
-                        print("Hitna korekcija - igrač izbačen ISPOD platforme (prisilno).")
+                        #print("Hitna korekcija - igrač izbačen ISPOD platforme (prisilno).")
 
                 # Provjera odbijanja od lijevog ili desnog bordera
                 if prev_x + self.width <= platform.rect.left:
                     self.x = platform.rect.left - self.width
-                    print("Odbijanje od LIJEVOG bordera.")
+                    #print("Odbijanje od LIJEVOG bordera.")
                 elif prev_x >= platform.rect.right:
                     self.x = platform.rect.right
-                    print("Odbijanje od DESNOG bordera.")
+                    #print("Odbijanje od DESNOG bordera.")
 
                 # ažuriranje rect pozicija igrača nakon odbijanja
                 self.rect.x = int(self.x)
