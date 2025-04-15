@@ -99,7 +99,7 @@ class Game:
             lines = [
                 f"Gen: {overlay_data['generation']}",
                 f"Alive: {overlay_data['alive']}",
-                f"Max Fit: {overlay_data['max_fitness']:.2f}"
+                f"Max Fitness: {overlay_data['max_fitness']:.2f}"
             ]
             for line in lines:
                 text_surface = font.render(line, True, WHITE)
@@ -112,6 +112,7 @@ class Game:
         self.screen.blit(self.level_image, (0, 0))
         for platform in self.platforms:
             self.screen.blit(platform.image, platform.rect)
+            #py.draw.rect(self.screen, (255, 0, 0), platform.rect, 1)
         for border in self.borders:
             self.screen.blit(border.image, border.rect)
         for ladder in self.ladders:
@@ -427,8 +428,9 @@ class Game:
                     py.quit()
                     exit()
                 elif event.type == self.NEW_BARREL_EVENT:
-                    new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
-                    self.barrels.append(new_barrel)
+                    #MAKNUT KOMENTARE DA SE BARRELI MOGU STVARATI
+                    #new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
+                    #self.barrels.append(new_barrel)
                     new_interval = random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN)
                     py.time.set_timer(self.NEW_BARREL_EVENT, new_interval)
 

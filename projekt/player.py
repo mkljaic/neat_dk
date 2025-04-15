@@ -144,6 +144,8 @@ class Player(pygame.sprite.Sprite):
                     self.y = platform.rect.bottom + 1
                     self.vel_y = 0
                     self.rect.y = self.y
+                    #print("1 udario glavom i odbijen")
+                    #print("-------------------")
                     # self.can_jump = False  # AKO PUKNE I OVO JE RAZLOG
                 # snapanje igraca na platformu ako pada
                 elif (prev_y + self.height <= platform.rect.top and
@@ -152,6 +154,7 @@ class Player(pygame.sprite.Sprite):
                     self.y = platform.rect.top - self.height
                     self.vel_y = 0
                     self.rect.y = self.y
+                    #print("pao na platformu")
                     # self.can_jump = True  # AKO PUKNE OVO JE RAZLOG
 
     def horizontal_steps(self, platforms, prev_x):
@@ -168,6 +171,7 @@ class Player(pygame.sprite.Sprite):
                             if not self.rect.colliderect(platform.rect):
                                 can_step = True
                                 self.y -= step
+                                #print("2 penje se desno")
                                 break
                         if not can_step:
                             self.x = platform.rect.left - self.width
@@ -181,6 +185,7 @@ class Player(pygame.sprite.Sprite):
                             if not self.rect.colliderect(platform.rect):
                                 can_step = True
                                 self.y -= step
+                                #print("2 penje se lijevo")
                                 break
                         if not can_step:
                             self.x = platform.rect.right
@@ -193,23 +198,50 @@ class Player(pygame.sprite.Sprite):
 
         for platform in platforms:
             if self.rect.colliderect(platform.rect):
-                #padanje i provjera
+                print("Kolizija detektirana:")
+                print(f"IGRAČ: {self.rect}, PLATFORM: {platform.rect}")
+                print(f"Prethodne pozicije -> prev_x={prev_x}, prev_y={prev_y}")
+                print(f"Trenutne pozicije -> x={self.x}, y={self.y}, vel_y={self.vel_y}")
+
+                # Provjeri dolazi li igrač odozgo i postavi ga na platformu
                 if prev_y + self.height <= platform.rect.top:
                     self.y = platform.rect.top - self.height
                     self.vel_y = 0
-                #provjera da se ne probije platforma, odozdo
+                    print("Igrač postavljen na platformu (odozgo).")
+
+                # Ako igrač udara platformu odozdo, odbaci ga prema dolje
                 elif prev_y >= platform.rect.bottom:
                     self.y = platform.rect.bottom
                     self.vel_y = 0
+                    print("Igrač izbačen ISPOD platforme (udar odozdo).")
 
-                #odbijanje od bordera
+                # Bočna kolizija (lijevo ili desno)
+                else:
+                    if prev_x + self.width <= platform.rect.left:
+                        self.x = platform.rect.left - self.width
+                        print("Odbijanje od LIJEVOG ruba platforme.")
+                    elif prev_x >= platform.rect.right:
+                        self.x = platform.rect.right
+                        print("Odbijanje od DESNOG ruba platforme.")
+                    else:
+                        # Ako je baš zaglavio, prisilno ga izbaci dolje
+                        self.y = platform.rect.bottom
+                        self.vel_y = 0
+                        print("Hitna korekcija - igrač izbačen ISPOD platforme (prisilno).")
+
+                # Provjera odbijanja od lijevog ili desnog bordera
                 if prev_x + self.width <= platform.rect.left:
                     self.x = platform.rect.left - self.width
+                    print("Odbijanje od LIJEVOG bordera.")
                 elif prev_x >= platform.rect.right:
                     self.x = platform.rect.right
+                    print("Odbijanje od DESNOG bordera.")
 
-                self.rect.x = self.x
-                self.rect.y = self.y
+                # ažuriranje rect pozicija igrača nakon odbijanja
+                self.rect.x = int(self.x)
+                self.rect.y = int(self.y)
+
+
 
     def on_ladder(self):
         '''for ladder in self.ladders:
