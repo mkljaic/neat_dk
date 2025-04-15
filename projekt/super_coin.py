@@ -2,7 +2,7 @@ import pygame
 
 class SuperCoin(pygame.sprite.Sprite):
     scoin_positions = [
-        (630, 660, 20, 20)
+        #(630, 660, 20, 20)
     ]
 
     def __init__(self, x, y, width, height):

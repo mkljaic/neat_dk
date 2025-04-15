@@ -70,8 +70,11 @@ class Game:
         self.princess.draw(self.screen)
 
         self.coins.draw(self.screen)
-        self.punishments.draw(self.screen)
+
+        #self.punishments.draw(self.screen)
+
         self.scoins.draw(self.screen)
+
 
         for player in players:
             player.draw(self.screen)
@@ -148,7 +151,7 @@ class Game:
                 self.barrels.remove(barrel)
 
 
-
+                                        #promijeniti ako hocu vise generacija
     def run_neat(self, config_path, generations=50, simulation_frames=3000):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -192,10 +195,10 @@ class Game:
                 self.scoins.add(scoin)
 
             # stvaram kaznu
-            self.punishments = pygame.sprite.Group()
+            '''self.punishments = pygame.sprite.Group()
             for (x, y, width, height) in Punishment.punishment_positions:
                 punishment = Punishment(x, y, width, height)
-                self.punishments.add(punishment)
+                self.punishments.add(punishment)'''
 
             for genome_id, genome in genomes:
                 genome.fitness = 0
@@ -271,14 +274,14 @@ class Game:
                         ge[i].fitness += 100 * len(collided_scoins)
                         print(f"igrac {i} pokupio {len(collided_scoins)} super novcic. fitness povecan za {100 * len(collided_scoins)}!")
 
-                    collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
+                    '''collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
                         ge[i].fitness -= 150
                         del players[i]
                         del nets[i]
                         del ge[i]
                         #print(f"igrac {i} dobio {len(collided_punishment)} kaznu. fitness umanjen za {150}!")
-                        continue
+                        continue'''
 
                     # kazna za stajanje
                     if player.rect.x == last_positions[i]:
@@ -308,12 +311,13 @@ class Game:
                     hit_by_barrel = any(player.rect.colliderect(barrel.rect) for barrel in self.barrels)
                     if hit_by_barrel:
                         ge[i].fitness -= 20  # kazna za sudar
-                        print("masna kazna jer bjezi")
+                        print("masna kazna jer ga je bacva udarila")
                         del players[i]
                         del nets[i]
                         del ge[i]
                         del last_positions[i]
                         del stuck_counter[i]
+                        del barrel #ovo dodano da obrise i barrel
                         continue
 
                     # ako propadne kroz border brisem ga
@@ -351,9 +355,9 @@ class Game:
                         player.frames_since_jump = 0
                         player.jump_rewarded = True
 
-                    if output[1] > 0.5:
+                    if output[1] > 0.2:
                         player.move_right()
-                    elif output[1] < -0.5:
+                    elif output[1] < -0.2:
                         player.move_left()
                     #if output[2] > 0.5:
                         #player.move_up()

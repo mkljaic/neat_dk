@@ -33,11 +33,16 @@ class Connection:
         self.weight = weight
 
     def draw_connection(self, surface):
-        color = GREEN if self.weight >= 0 else BLACK
-        width = max(1, int(abs(self.weight * CONNECTION_WIDTH)))
-        start = (self.input.x + NODE_RADIUS, self.input.y)
-        end = (self.output.x - NODE_RADIUS, self.output.y)
-        py.draw.line(surface, color, start, end, width)
+        if self.weight >= 0:
+            color = GREEN
+            width = max(1, int(abs(self.weight * CONNECTION_WIDTH)))
+            start = (self.input.x + NODE_RADIUS, self.input.y)
+            end = (self.output.x - NODE_RADIUS, self.output.y)
+            py.draw.line(surface, color, start, end, width)
+        else:
+            # Ako je težina negativna, linija se ne crta
+            pass
+
 
 class NN:
     def __init__(self, config, genome, pos):

@@ -72,13 +72,15 @@ compatibility_threshold = 3.0
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation       = 20
-species_elitism      = 2
+max_stagnation       = 20 # Ako vrsta ne poboljšava svoj fitness u 20 generacija, ona se smatra stagnirajućom i može biti uklonjena.
+species_elitism      = 2 # Broj najboljih vrsta koje su zaštićene od uklanjanja zbog stagnacije.
 
 [DefaultReproduction]
-elitism            = 2
+elitism            = 2 # Broj najboljih genoma (pojedinaca) koji se automatski prenose u sljedeću generaciju bez mutacija.
 survival_threshold = 0.2
-
+#   Samo 20% najbolje rangiranih članova unutar vrste smije imati potomke.
+#   Ostatak populacije se ne reproducira.
+#   Niža vrijednost = jača selekcija → brža evolucija, ali veći rizik od gubitka raznolikosti.
 
 python main.py --mode run           # za ručno igranje
 python main.py --mode run_neat      # za treniranje
