@@ -32,10 +32,10 @@ class Game:
         self.borders = [Border(x, y, width, height) for (x, y, width, height) in Border.border_positions]
         self.platforms = [PlatformDK(x, y, width, height) for (x, y, width, height) in PlatformDK.platform_positions]
         self.ladders = [Ladder(x, y, width, height) for (x, y, width, height) in Ladder.ladder_positions]
-        #self.ladders_detect = [LadderDetect(x, y, width, height) for (x, y, width, height) in LadderDetect.ladder_detect_positions]
+        self.ladders_detect = [LadderDetect(x, y, width, height) for (x, y, width, height) in LadderDetect.ladder_detect_positions]
 
         self.barrels = []
-        self.player = Player(PLAYER_X, PLAYER_Y, self.platforms, self.borders, self.ladders)
+        self.player = Player(PLAYER_X, PLAYER_Y, self.platforms, self.borders, self.ladders, self.ladders_detect)
         self.princess = Princess(PRINCESS_X, PRINCESS_Y, self.player)
 
         self.level_image = py.image.load(os.path.join('projekt', 'Assets', 'level.png')).convert()
@@ -67,8 +67,8 @@ class Game:
             self.screen.blit(border.image, border.rect)
         for ladder in self.ladders:
             self.screen.blit(ladder.image, ladder.rect)
-        '''for ladder_detect in self.ladders_detect:
-            self.screen.blit(ladder_detect.image, ladder_detect.rect)'''
+        for ladder_detect in self.ladders_detect:
+            self.screen.blit(ladder_detect.image, ladder_detect.rect)
         for barrel in self.barrels:
             barrel.draw(self.screen)
         self.princess.draw(self.screen)
@@ -124,8 +124,8 @@ class Game:
             self.screen.blit(border.image, border.rect)
         for ladder in self.ladders:
             self.screen.blit(ladder.image, ladder.rect)
-        '''for ladder_detect in self.ladders_detect:
-            self.screen.blit(ladder_detect.image, ladder_detect.rect)'''
+        for ladder_detect in self.ladders_detect:
+            self.screen.blit(ladder_detect.image, ladder_detect.rect)
         for barrel in self.barrels:
             barrel.draw(self.screen)
 

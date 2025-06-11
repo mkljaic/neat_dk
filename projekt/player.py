@@ -4,7 +4,7 @@ from projekt.config import *
 import time
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y, platforms, borders, ladders):
+    def __init__(self, x, y, platforms, borders, ladders, ladders_detect):
         super().__init__()
 
         self.x = x
@@ -21,6 +21,12 @@ class Player(pygame.sprite.Sprite):
         self.platforms = platforms
         self.borders = borders
         self.ladders = ladders
+
+        self.ladder_detects = ladders_detect
+
+        self.ladder_mode = False
+        self.detect_mode = False
+        self.detect_entry_y = 0
 
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill((255, 0, 0))
@@ -241,12 +247,16 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x = int(self.x)
                 self.rect.y = int(self.y)
 
-
+    def on_ladder_detect(self):
+        for ld in self.ladder_detects:
+            if self.rect.colliderect(ld.rect):
+                return True
+        return False
 
     def on_ladder(self):
-        '''for ladder in self.ladders:
+        for ladder in self.ladders:
             if self.rect.colliderect(ladder.rect):
-                return True'''
+                return True
         return False
 
     def climb_ladder(self, keys):
@@ -266,7 +276,7 @@ class Player(pygame.sprite.Sprite):
         pass
 
     def update_player(self, keys, platforms):
-        prev_y, prev_x = self.y, self.x
+        '''prev_y, prev_x = self.y, self.x
         #print("grounded:", self.is_grounded(), "VelY:", self.vel_y)
 
         if self.on_ladder():
@@ -287,6 +297,91 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = self.y
 
         # provjera kolizija
+        self.check_collision_platform(platforms, prev_y, prev_x)
+        self.check_collision_border(self.borders, prev_x)'''
+        # Enter detect-only mode: when on detect zone, not on ladder, pressing down/up
+        if not self.ladder_mode and not self.detect_mode:
+            if self.on_ladder_detect() and not self.on_ladder() and (keys[pygame.K_DOWN] or keys[pygame.K_s]):
+                self.detect_mode = True
+                self.detect_entry_y = self.y
+                self.vel_y = 0
+
+        # Handle detect-only descending/ascending
+        if self.detect_mode:
+            # Exit on horizontal input
+            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_a] or keys[pygame.K_d]:
+                self.detect_mode = False
+                return
+            # Move down
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                self.y += self.speed
+            # Move up, but not above entry point
+            elif keys[pygame.K_UP] or keys[pygame.K_w]:
+                self.y -= self.speed
+                if self.y < self.detect_entry_y:
+                    self.y = self.detect_entry_y
+            self.rect.y = int(self.y)
+            # If reaches ladder, exit detect mode
+            if self.on_ladder():
+                self.detect_mode = False
+                # now ladder_mode can activate next frame if input
+                return
+            return
+
+        # Attempt to enter ladder mode when on detect + ladder and pressing vertical
+        if not self.ladder_mode:
+            if self.on_ladder_detect() and self.on_ladder() and (
+                    keys[pygame.K_UP] or keys[pygame.K_w] or
+                    keys[pygame.K_DOWN] or keys[pygame.K_s]):
+                self.ladder_mode = True
+                self.vel_y = 0
+
+        # Ladder mode: only vertical movement, no gravity
+        if self.ladder_mode:
+            # Exit on horizontal input
+            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_a] or keys[pygame.K_d]:
+                self.ladder_mode = False
+                return
+            # Move up/down
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
+                self.y -= self.speed
+            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                self.y += self.speed
+            self.rect.y = int(self.y)
+
+            # Exit if off ladder
+            if not self.on_ladder():
+                self.ladder_mode = False
+                return
+
+            # Landing on a platform when descending from ladder
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                for platform in platforms:
+                    if self.rect.colliderect(platform.rect) and self.rect.bottom > platform.rect.top:
+                        self.y = platform.rect.top - self.height
+                        self.rect.y = int(self.y)
+                        self.ladder_mode = False
+                        return
+            return
+
+        # Standard movement when not in ladder or detect mode
+        prev_y, prev_x = self.y, self.x
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.x -= self.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.x += self.speed
+        current_time = time.time()
+        if keys[pygame.K_SPACE] and self.is_grounded():
+            if current_time - self.last_jump_time >= self.jump_cooldown:
+                self.vel_y = -self.jump
+                self.last_jump_time = current_time
+
+        self.vel_y += self.gravity
+        self.y += self.vel_y
+
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
+
         self.check_collision_platform(platforms, prev_y, prev_x)
         self.check_collision_border(self.borders, prev_x)
 
