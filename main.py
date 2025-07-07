@@ -14,8 +14,8 @@ def main():
     pygame.display.set_caption("Donkey Kong AI")
 
     parser = argparse.ArgumentParser(description="Pokreni igru u različitim modovima")
-    parser.add_argument("--mode", type=str, choices=["run", "run_neat", "run_winner"], default="run_neat",
-                        help="Odaberi način rada: run, run_neat, run_winner")
+    parser.add_argument("--mode", type=str, choices=["run", "run_neat", "run_winner", "resume"], default="run_neat",
+                        help="Odaberi način rada: run, run_neat, run_winner, resume")
     args = parser.parse_args()
 
     game = Game(screen)
@@ -26,6 +26,8 @@ def main():
         game.run_neat(game.config_path)
     elif args.mode == "run_winner":
         game.run_winner(game.config_path)
+    elif args.mode == "resume":
+        game.run_neat(game.config_path, resume=True)
 
 if __name__ == "__main__":
     main()

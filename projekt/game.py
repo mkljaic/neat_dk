@@ -5,6 +5,7 @@ import os
 import neat
 import pickle
 
+#from projekt import border
 from projekt.super_coin import SuperCoin
 from projekt.punishment import Punishment
 from projekt.coin import Coin
@@ -63,8 +64,8 @@ class Game:
 
         for platform in self.platforms:
             self.screen.blit(platform.image, platform.rect)
-        for border in self.borders:
-            self.screen.blit(border.image, border.rect)
+        for borderEval in self.borders:
+            self.screen.blit(borderEval.image, borderEval.rect)
         for ladder in self.ladders:
             self.screen.blit(ladder.image, ladder.rect)
         for ladder_detect in self.ladders_detect:
@@ -120,8 +121,8 @@ class Game:
         for platform in self.platforms:
             self.screen.blit(platform.image, platform.rect)
             #py.draw.rect(self.screen, (255, 0, 0), platform.rect, 1)
-        for border in self.borders:
-            self.screen.blit(border.image, border.rect)
+        for borderEval in self.borders:
+            self.screen.blit(borderEval.image, borderEval.rect)
         for ladder in self.ladders:
             self.screen.blit(ladder.image, ladder.rect)
         for ladder_detect in self.ladders_detect:
@@ -156,7 +157,7 @@ class Game:
 
 
                                         #promijeniti ako hocu vise generacija
-    def run_neat(self, config_path, generations=500, simulation_frames=3000):
+    def run_neat(self, config_path, generations=10000, simulation_frames=3000, resume = False):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                     config_path)
@@ -166,6 +167,26 @@ class Game:
 
         gen = 0
 
+        if resume:
+            checkpoints = [f for f in os.listdir() if f.startswith("dk-checkpoint-")]
+            if checkpoints:
+                last = sorted(checkpoints, key=lambda x: int(x.split("-")[-1]))[-1]
+                print(f"✱ Obnavljam iz {last}")
+                p = neat.Checkpointer.restore_checkpoint(last)
+            else:
+                print("✱ Nije pronađen nijedan checkpoint – krećem ispočetka.")
+                p = neat.Population(config)
+        else:
+            p = neat.Population(config)
+
+        p.add_reporter(neat.StdOutReporter(True))
+        p.add_reporter(neat.StatisticsReporter())
+
+        p.add_reporter(
+            neat.Checkpointer(generation_interval=10,
+                              filename_prefix="dk-checkpoint-")
+        )
+
         def eval_genomes(genomes, config):
             nonlocal gen
             gen += 1
@@ -173,7 +194,7 @@ class Game:
             # svakih 5 generacija im dam 5 sekundi zivota vise
             if gen % 5 == 0:
                 self.max_lifetime += 5
-                print(f"Nova max_lifetime vrijednost: {self.max_lifetime} sekundi")
+                #print(f"Nova max_lifetime vrijednost: {self.max_lifetime} sekundi")
 
             max_frames = self.max_lifetime * FPS  # najveci broj frameova prije nego sto ih obrisem
 
@@ -208,7 +229,7 @@ class Game:
                 genome.fitness = 0
                 net = neat.nn.FeedForwardNetwork.create(genome, config)
                 nets.append(net)
-                p_inst = Player(PLAYER_X, PLAYER_Y, self.platforms, self.borders, self.ladders)
+                p_inst = Player(PLAYER_X, PLAYER_Y, self.platforms, self.borders, self.ladders, self.ladders_detect)
                 p_inst.best_y = p_inst.rect.y
                 players.append(p_inst)
                 ge.append(genome)
@@ -249,35 +270,16 @@ class Game:
                     self.player = players[i]
                     self.platforms = players[i].platforms
 
-                    # brojanje frameova bez skoka
-                    player.frames_since_jump += 1
-
-
-                    currently_grounded = player.is_grounded()
-
-                    # ako je bio na tlu i sad vise nije odnosno skocio je
-                    if player.was_grounded and not currently_grounded:
-                        player.has_jumped = True
-                        player.previous_best_y = player.best_y
-
-                    # ako je sletio na pod nakon skoka
-                    '''if not player.was_grounded and currently_grounded and player.has_jumped:
-                        if player.best_y >= player.previous_best_y:
-                            ge[i].fitness -= 5  # kazna ako skace da skace
-                            #print(f"igrac {i} skocio bez razloga. kazna -5.")
-                        player.has_jumped = False  # reset
-                    player.was_grounded = currently_grounded'''
-
 
                     collided_coins = pygame.sprite.spritecollide(player, self.coins, True)
                     if collided_coins:
-                        ge[i].fitness += 20 * len(collided_coins)
-                        print(f"igrac {i} pokupio {len(collided_coins)} novcic. fitness povecan za {20 * len(collided_coins)}!")
+                        ge[i].fitness += 8 * len(collided_coins)
+                        #print(f"igrac {i} pokupio {len(collided_coins)} novcic. fitness povecan za {20 * len(collided_coins)}!")
 
                     collided_scoins = pygame.sprite.spritecollide(player, self.scoins, True)
                     if collided_scoins:
-                        ge[i].fitness += 100 * len(collided_scoins)
-                        print(f"igrac {i} pokupio {len(collided_scoins)} super novcic. fitness povecan za {100 * len(collided_scoins)}!")
+                        ge[i].fitness += 10 * len(collided_scoins)
+                        #print(f"igrac {i} pokupio {len(collided_scoins)} super novcic. fitness povecan za {100 * len(collided_scoins)}!")
 
                     '''collided_punishment = pygame.sprite.spritecollide(player, self.punishments, True)
                     if collided_punishment:
@@ -296,27 +298,40 @@ class Game:
                         last_positions[i] = player.rect.x
 
                     if stuck_counter[i] > 60:
-                        ge[i].fitness -= 5
-                        del players[i]
+                        ge[i].fitness -= 0.05
+                        '''del players[i]
                         del nets[i]
                         del ge[i]
                         del last_positions[i]
                         del stuck_counter[i]
-                        #print("kazna jer je debel i ne krece se")
-                        continue
+                        print("kazna jer je debel i ne krece se")
+                        continue'''
+
+                    #nagrada ako se krece lijevo desno dok je u zraku
+                    if not player.is_grounded():
+                        if player.rect.x != last_positions[i]:
+                            ge[i].fitness += 3
 
                     # nagrada za preskakanje barrela
                     for barrel in self.barrels:
                         if (barrel.rect.right > player.rect.left and barrel.rect.left < player.rect.right and
                                 barrel.rect.top > player.rect.bottom and 0 < (
                                         barrel.rect.top - player.rect.bottom) < 20):
-                            ge[i].fitness += 5  # nagrada za izbjegavanje
+                            ge[i].fitness += 25  # nagrada za izbjegavanje
+
+
+                    teleport_area = pygame.Rect(640, 660, 30, 30)  # 30×30 px zona
+
+                    if player.rect.colliderect(teleport_area):
+                        player.x = 580
+                        player.y = 620
+                        player.rect.topleft = (player.x, player.y)
 
                     # ako ga barrel pogodi brisem ga
                     hit_by_barrel = any(player.rect.colliderect(barrel.rect) for barrel in self.barrels)
                     if hit_by_barrel:
-                        ge[i].fitness -= 5  # kazna za sudar
-                        print("masna kazna jer ga je bacva udarila")
+                        ge[i].fitness -= 20 # kazna za sudar
+                        #print("masna kazna jer ga je bacva udarila")
                         del players[i]
                         del nets[i]
                         del ge[i]
@@ -336,13 +351,28 @@ class Game:
                         print("masna kazna jer bjezi")
                         continue
 
+                    #kazna za dodir s borderom
+                    for br in self.borders:
+                        expanded = br.rect.inflate(4, 4)
+                        if player.rect.colliderect(expanded):
+                            #print("border sudar ", ge[i].fitness)
+                            ge[i].fitness -= 5
+                            #print(ge[i].fitness)
+
+
                     # bonus fitness za novodosegnutu visinu
                     if player.rect.y < player.best_y:
-                        bonus = player.best_y - player.rect.y
-                        print(bonus)
+                        pixel_gain = player.best_y - player.rect.y
+                        HEIGHT_BONUS_MULTIPLIER = 3  # adjust this to scale bonus
+                        bonus = pixel_gain * HEIGHT_BONUS_MULTIPLIER
                         ge[i].fitness += bonus
                         player.best_y = player.rect.y
 
+                    if player.rect.y > player.best_y:
+                        ge[i].fitness -= 0.001 #kazna ako ne napreduje gore
+
+                    #if player.rect.y > player.best_y and player.on_ladder():
+                        #ge[i].fitness += 0.001 #nagrada za penjanje
                     # aktiviranje nn
                     inputs = player.get_network_inputs(self.ladders, self.barrels, self.princess.rect.y)
                     output = nets[i].activate(inputs)
@@ -354,7 +384,7 @@ class Game:
                     current_time = time.time()
 
                     # nn pokrece igraca
-                    if output[0] > 0.3 and player.is_grounded():
+                    '''if output[0] > 0.3 and player.is_grounded():
                         if current_time - self.last_jump_time >= self.jump_cooldown:
                             player.upup()
                             self.last_jump_time = current_time
@@ -366,14 +396,48 @@ class Game:
                         player.frames_since_jump = 0
                         player.jump_rewarded = True
 
+                    print("Right/Left: ", output[1])
+                    if output[1] > 0.46:
+                        player.move_right()
+                    elif output[1] < 0.45:
+                        player.move_left()
+                    if output[2] > 0.5:
+                        player.move_up()
+                    elif output[2] < 0.49:
+                        player.move_down()'''
+
+                    #print("best y ", player.best_y)
+                    #print("x ", player.rect.x)
+
+                    # skok ako output[0] dovoljno pozitivan
+                    if output[0] > 0.5 and player.is_grounded():
+                        #player.upup()
+                        if current_time - self.last_jump_time >= self.jump_cooldown:
+                            player.upup()
+                            self.last_jump_time = current_time
+                            player.jumping = True
+                            player.y_at_jump = player.rect.y
+                        if not player.is_grounded():
+                            # …i još nije srušio vlastiti rekord visine…
+                            if player.jumping and player.best_y == player.y_at_jump:
+                                # → pokušaj horizontalno kretanje da „potraži“ rampu/ljestve
+                                if output[1] > 0.2:
+                                    player.move_right()
+                                elif output[1] < -0.2:
+                                    player.move_left()
+                        else:
+                            # Ponovno prizemljenje: resetiraj flag
+                            player.jumping = False
+                        # horizontalno kretanje: desno ako >0.2, lijevo ako <-0.2
                     if output[1] > 0.2:
                         player.move_right()
                     elif output[1] < -0.2:
                         player.move_left()
-                    #if output[2] > 0.5:
-                        #player.move_up()
-                    #elif output[2] < -0.5:
-                        #player.move_down()
+                    # vertikalno kretanje: gore ako >0.2, dolje ako <-0.2
+                    if output[2] > 0.2 and player.on_ladder():
+                        player.move_up()
+                    elif output[2] < -0.2 and player.on_ladder():
+                        player.move_down()
 
                     # primjena gravitacije
                     player.vel_y += player.gravity
@@ -389,7 +453,7 @@ class Game:
                         print(f"Igrač {i} je dosegao princezu! Kraj evaluacije.")
                         ge[i].fitness += 1000  # fitness bonus jer je dobar
                         self.save_winner(ge[i])
-                        return
+                        print("neka trazi jos")
 
                     # kazna ako predugo nije skočio
                     '''for j, player in enumerate(players):

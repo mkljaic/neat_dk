@@ -44,6 +44,9 @@ class Player(pygame.sprite.Sprite):
         self.last_jump_time = 0  # vrijeme zadnjeg skoka
         self.jump_cooldown = 1.0  # cooldown u sekundama
 
+        self.jumping = False
+        self.y_at_jump = None
+
     def move_left(self):
         self.x -= self.speed
         #self.vel_y += self.gravity
@@ -338,11 +341,6 @@ class Player(pygame.sprite.Sprite):
 
         # Ladder mode: only vertical movement, no gravity
         if self.ladder_mode:
-            # Exit on horizontal input
-            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_a] or keys[pygame.K_d]:
-                self.ladder_mode = False
-                return
-            # Move up/down
             if keys[pygame.K_UP] or keys[pygame.K_w]:
                 self.y -= self.speed
             elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
@@ -408,4 +406,6 @@ class Player(pygame.sprite.Sprite):
             barrel_vel_y = nearest_barrel.vel_y / BARREL_SPEED if hasattr(nearest_barrel, 'vel_y') else 0.0
         else:
             barrel_x = barrel_y = barrel_vel_x = barrel_vel_y = 0.0
-        return [norm_x, norm_y, grounded, on_ladder, climbing, ladder_x, barrel_x, barrel_y, barrel_vel_x, barrel_vel_y, distance_to_princess_y]
+        #return [norm_x, norm_y, grounded, on_ladder, climbing, ladder_x, barrel_x, barrel_y, barrel_vel_x, barrel_vel_y, distance_to_princess_y]
+
+        return [norm_x, norm_y, grounded, on_ladder, climbing, ladder_x, barrel_x, barrel_y]
