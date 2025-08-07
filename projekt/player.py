@@ -47,6 +47,66 @@ class Player(pygame.sprite.Sprite):
         self.jumping = False
         self.y_at_jump = None
 
+        self.animations = {
+            'down': [
+                self.load_scaled_image('mario_up_1.png', self.width, self.height),
+                self.load_scaled_image('mario_up_2.png', self.width, self.height)
+            ],
+            'up': [
+                self.load_scaled_image('mario_up_1.png', self.width, self.height),
+                self.load_scaled_image('mario_up_2.png', self.width, self.height)
+            ],
+            'left': [
+                self.load_scaled_image('mario_run_left1.png', self.width, self.height),
+                self.load_scaled_image('mario_run_left2.png', self.width, self.height)
+            ],
+            'right': [
+                self.load_scaled_image('mario_run_right1.png', self.width, self.height),
+                self.load_scaled_image('mario_run_right2.png', self.width, self.height)
+            ],
+        }
+
+        self.idle_images = {
+            'left': self.load_scaled_image('mario_left.png', self.width, self.height),
+            'right': self.load_scaled_image('mario_right.png', self.width, self.height),
+        }
+
+        self.moving = False
+        self.direction = 'right'
+        self.image_index = 0
+        self.animation_counter = 0
+        self.image = self.animations[self.direction][self.image_index]
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def update_animation(self):
+        if self.on_ladder() and abs(self.vel_y) > 0:
+            ladder_dir = 'up' if self.vel_y < 0 else 'down'
+            seq = self.animations[ladder_dir]
+            self.animation_counter += 1
+            if self.animation_counter >= 5:
+                self.animation_counter = 0
+                self.image_index = (self.image_index + 1) % len(seq)
+            self.image = seq[self.image_index]
+
+        elif self.moving:
+            seq = self.animations[self.direction]
+            self.animation_counter += 1
+            if self.animation_counter >= 5:
+                self.animation_counter = 0
+                self.image_index = (self.image_index + 1) % len(seq)
+            self.image = seq[self.image_index]
+
+        else:
+            self.image_index = 0
+            self.animation_counter = 0
+            self.image = self.idle_images[self.direction]
+
+    def load_scaled_image(self, filename, width, height):
+        path = os.path.join('projekt', 'Assets', filename)
+        image = pygame.image.load(path).convert_alpha()
+        return pygame.transform.scale(image, (width, height))
+
+
     def move_left(self):
         self.x -= self.speed
         #self.vel_y += self.gravity
@@ -54,6 +114,8 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.x = self.x
         #self.rect.y = self.y
+        self.direction = 'left'
+        self.moving = True
 
     def move_right(self):
         self.x += self.speed
@@ -62,6 +124,8 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.x = self.x
         #self.rect.y = self.y
+        self.direction = 'right'
+        self.moving = True
 
     def move_up(self):
         self.y -= self.speed
@@ -70,6 +134,8 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.x = self.x
         self.rect.y = self.y
+        self.direction = 'up'
+        self.moving = True
 
     def move_down(self):
         self.y += self.speed
@@ -78,9 +144,13 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.x = self.x
         self.rect.y = self.y
+        self.direction = 'down'
+        self.moving = True
 
     def upup(self):
         self.vel_y = -self.jump
+        self.direction = 'up'
+        self.moving = True
 
     def move(self, keys):
         prev_y = self.y
@@ -88,8 +158,12 @@ class Player(pygame.sprite.Sprite):
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.move_left()
+            self.direction = 'left'
+            self.moving = True
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_right()
+            self.direction = 'right'
+            self.moving = True
 
         current_time = time.time()
         if keys[pygame.K_SPACE] and self.is_grounded():
@@ -303,6 +377,7 @@ class Player(pygame.sprite.Sprite):
         self.check_collision_platform(platforms, prev_y, prev_x)
         self.check_collision_border(self.borders, prev_x)'''
         # Enter detect-only mode: when on detect zone, not on ladder, pressing down/up
+        self.moving = False
         if not self.ladder_mode and not self.detect_mode:
             if self.on_ladder_detect() and not self.on_ladder() and (keys[pygame.K_DOWN] or keys[pygame.K_s]):
                 self.detect_mode = True
@@ -365,13 +440,14 @@ class Player(pygame.sprite.Sprite):
         # Standard movement when not in ladder or detect mode
         prev_y, prev_x = self.y, self.x
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.x -= self.speed
+            self.move_left()
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.x += self.speed
+            self.move_right()
+
         current_time = time.time()
         if keys[pygame.K_SPACE] and self.is_grounded():
             if current_time - self.last_jump_time >= self.jump_cooldown:
-                self.vel_y = -self.jump
+                self.upup()
                 self.last_jump_time = current_time
 
         self.vel_y += self.gravity
@@ -382,6 +458,8 @@ class Player(pygame.sprite.Sprite):
 
         self.check_collision_platform(platforms, prev_y, prev_x)
         self.check_collision_border(self.borders, prev_x)
+
+        self.update_animation()
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)

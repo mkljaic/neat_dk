@@ -80,7 +80,7 @@ class PlatformDK(pygame.sprite.Sprite):
 
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.Surface((width, height))
+        self.image = pygame.Surface((width, height), pygame.SRCALPHA)
         self.image.fill((255, 255, 255, 0))
         pygame.draw.rect(self.image, (128, 0, 128), self.image.get_rect(), width=1)
         self.rect = self.image.get_rect(topleft=(x, y))

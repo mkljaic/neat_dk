@@ -1,5 +1,6 @@
 import pygame
 from projekt.config import *
+import os
 
 class Princess(pygame.sprite.Sprite):
 
@@ -13,8 +14,10 @@ class Princess(pygame.sprite.Sprite):
         self.width = PRINCESS_WIDTH
         self.height = PRINCESS_HEIGHT
 
-        self.image = pygame.Surface((self.width, self.height))
-        self.image.fill((251, 198, 207))
+        self.image = py.image.load(os.path.join('projekt', 'Assets', 'peach.png')).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (20, 40))
+        #self.image = pygame.Surface((self.width, self.height))
+        #self.image.fill((251, 198, 207))
         self.rect = self.image.get_rect(topleft=(self.x, self.y))
 
 

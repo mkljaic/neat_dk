@@ -42,6 +42,7 @@ class Game:
         self.level_image = py.image.load(os.path.join('projekt', 'Assets', 'level.png')).convert()
 
 
+
         self.NEW_BARREL_EVENT = py.USEREVENT + 1
         py.time.set_timer(self.NEW_BARREL_EVENT, random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN))
         self.game_over = False
@@ -143,6 +144,7 @@ class Game:
         keys = py.key.get_pressed()
         if self.player is not None:
             self.player.update_player(keys, self.platforms)
+            #self.player.update_animation()
             if self.player.rect.colliderect(self.princess.rect):
                 self.player = None
         for barrel in self.barrels:
@@ -447,6 +449,7 @@ class Game:
                     # kolizije
                     player.check_collision_platform(self.platforms, prev_y, prev_x)
                     player.check_collision_border(self.borders, prev_x)
+                    player.update_animation()
 
                     # kada dotakne princezu gotovo je
                     if player.rect.colliderect(self.princess.rect):
