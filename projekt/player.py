@@ -149,7 +149,6 @@ class Player(pygame.sprite.Sprite):
 
     def upup(self):
         self.vel_y = -self.jump
-        self.direction = 'up'
         self.moving = True
 
     def move(self, keys):
