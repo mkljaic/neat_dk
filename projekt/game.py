@@ -41,8 +41,6 @@ class Game:
 
         self.level_image = py.image.load(os.path.join('projekt', 'Assets', 'level.png')).convert()
 
-
-
         self.NEW_BARREL_EVENT = py.USEREVENT + 1
         py.time.set_timer(self.NEW_BARREL_EVENT, random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN))
         self.game_over = False
@@ -57,7 +55,33 @@ class Game:
         self.last_jump_time = 0  # vrijeme zadnjeg skoka
         self.jump_cooldown = 1.0  # cooldown u sekundama
 
+        self.dk_pos = (50, 150)
 
+        self.dk_idle = self.load_scaled_image('kong.png', 100, 100)
+        self.dk_dance = [
+            self.load_scaled_image('kong_left.png', 100, 100),
+            self.load_scaled_image('kong_right.png', 100, 100),
+        ]
+        self.dk_throw = [
+            self.load_scaled_image('kong_barrel_left.png', 100, 100),
+            self.load_scaled_image('kong_barrel_right.png', 100, 100)
+        ]
+
+        self.dk_mode = 'idle'
+        self.dk_frame = 0
+        self.dk_counter = 0
+        self.dk_timer = 0
+
+        self.throwing = False
+        self.throw_frame = 0
+        self.throw_counter = 0
+        self.throw_delay = 8
+        self.pending_barrel = False
+
+    def load_scaled_image(self, filename, width, height):
+            path = os.path.join('projekt', 'Assets', filename)
+            image = pygame.image.load(path).convert_alpha()
+            return pygame.transform.scale(image, (width, height))
 
     def draw_eval(self, players, neat_img=None, overlay_data=None):
         self.screen.fill((0, 0, 0))
@@ -114,7 +138,9 @@ class Game:
                 text_surface = font.render(line, True, WHITE)
                 self.screen.blit(text_surface, (x_offset, y_offset))
                 y_offset += text_surface.get_height() + 5
+        self.draw_thrower()
         py.display.flip()
+
 
     def draw(self, neat_img=None, overlay_data=None):
         self.screen.fill((0, 0, 0))
@@ -138,7 +164,45 @@ class Game:
             self.player.draw(self.screen)
         if neat_img is not None:
             self.screen.blit(neat_img, (self.screen_width - 600, self.screen_height - 600))
+        self.draw_thrower()
         py.display.flip()
+
+    def update_thrower(self):
+        if self.dk_mode == 'idle':
+            self.dk_timer += 1
+            if self.dk_timer > 300:
+                self.dk_mode = 'nudge'
+                self.dk_frame = 0
+                self.dk_counter = 0
+                self.dk_timer = 0
+
+        elif self.dk_mode == 'nudge':
+            self.dk_counter += 1
+            if self.dk_counter >= 15:
+                self.dk_counter = 0
+                self.dk_frame += 1
+                if self.dk_frame >= len(self.dk_dance):
+                    self.dk_mode = 'idle'
+                    self.dk_frame = 0
+
+        elif self.dk_mode == 'prethrow':
+            self.dk_counter += 1
+            if self.dk_counter >= 8:
+                self.dk_counter = 0
+                self.dk_frame += 1
+                if self.dk_frame >= len(self.dk_throw):
+                    self.dk_mode = 'idle'
+                    self.dk_frame = 0
+
+    def draw_thrower(self):
+        if self.dk_mode == 'nudge':
+            img = self.dk_dance[self.dk_frame]
+        elif self.dk_mode == 'prethrow':
+            img = self.dk_throw[self.dk_frame]
+        else:
+            img = self.dk_idle
+
+        self.screen.blit(img, self.dk_pos)
 
     def update(self):
         keys = py.key.get_pressed()
@@ -156,9 +220,9 @@ class Game:
         for barrel in self.barrels[:]:
             if barrel.rect.colliderect(self.barrel_remover):
                 self.barrels.remove(barrel)
+        self.update_thrower()
 
-
-                                        #promijeniti ako hocu vise generacija
+                #promijeniti ako hocu vise generacija
     def run_neat(self, config_path, generations=10000, simulation_frames=3000, resume = False):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -253,13 +317,21 @@ class Game:
                         py.quit()
                         exit()
                     elif event.type == self.NEW_BARREL_EVENT:
+                        self.throwing = True
+                        self.throw_frame = 0
                         new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
                         self.barrels.append(new_barrel)
                         new_interval = random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN)
                         py.time.set_timer(self.NEW_BARREL_EVENT, new_interval)
 
+                if self.throwing and self.dk_mode == 'idle':
+                    self.dk_mode = 'prethrow'
+                    self.throwing = False
+
                 for barrel in self.barrels:
                     barrel.update_barrel()
+
+                self.update_thrower()
 
                 # brisanje barrela kad izadje iz ekrana
                 for barrel in self.barrels[:]:
@@ -451,6 +523,7 @@ class Game:
                     player.check_collision_border(self.borders, prev_x)
                     player.update_animation()
 
+
                     # kada dotakne princezu gotovo je
                     if player.rect.colliderect(self.princess.rect):
                         print(f"Igrač {i} je dosegao princezu! Kraj evaluacije.")
@@ -510,11 +583,20 @@ class Game:
                     py.quit()
                     exit()
                 elif event.type == self.NEW_BARREL_EVENT:
-                    #MAKNUT KOMENTARE DA SE BARRELI MOGU STVARATI
-                    #new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
-                    #self.barrels.append(new_barrel)
+
+                    self.throwing = True
+                    self.throw_frame = 0
+
+                    new_barrel = Barrel(BARREL_X, BARREL_Y, self.platforms, self.borders)
+                    self.barrels.append(new_barrel)
+
                     new_interval = random.randint(MIN_BARREL_SPAWN, MAX_BARREL_SPAWN)
                     py.time.set_timer(self.NEW_BARREL_EVENT, new_interval)
+
+            if self.throwing:
+                if self.dk_mode == 'idle':
+                    self.dk_mode = 'prethrow'
+                self.throwing = False
 
             self.update()
             self.draw()
